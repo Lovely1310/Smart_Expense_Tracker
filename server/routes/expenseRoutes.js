@@ -2,26 +2,37 @@ const express = require('express');
 const router = express.Router();
 const Expense = require('../models/Expense');
 
-// 1. Naya Expense Add Karne ke liye (POST)
+// 1. Add Record
 router.post('/add', async (req, res) => {
     try {
-        const { title, amount, category, companyName, description } = req.body;
-        const newExpense = new Expense({ title, amount, category, companyName, description });
-        await newExpense.save();
-        res.status(201).json({ message: "Expense added successfully!", newExpense });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+        const newRecord = new Expense(req.body);
+        await newRecord.save();
+        res.status(201).json(newRecord);
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 2. Saare Expenses dekhne ke liye (GET)
+// 2. Get All Records
 router.get('/all', async (req, res) => {
     try {
-        const expenses = await Expense.find().sort({ date: -1 }); // Newest first
-        res.json(expenses);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+        const data = await Expense.find().sort({ date: -1 });
+        res.json(data);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// 3. Update (Gaadi Sold karne ke liye)
+router.put('/update/:id', async (req, res) => {
+    try {
+        const updated = await Expense.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(updated);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// 4. Delete
+router.delete('/delete/:id', async (req, res) => {
+    try {
+        await Expense.findByIdAndDelete(req.params.id);
+        res.json({ message: "Deleted" });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 module.exports = router;

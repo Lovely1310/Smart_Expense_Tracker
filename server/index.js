@@ -4,15 +4,26 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
+
+// 1. CORS Setup (Isse CORS error hamesha ke liye khatam)
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
-app.use(cors());
-const expenseRoutes = require('./routes/expenseRoutes');
-app.use('/api/expenses', expenseRoutes);
 
-// Database Connection
+// 2. Routes 
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/expenses', require('./routes/expenseRoutes'));
+
+// 3. Health Check (Test link)
+app.get('/', (req, res) => res.send("<h1>Backend is Live!</h1>"));
+
+// 4. DB Connection
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected!"))
-  .catch((err) => console.log("❌ DB Connection Error:", err));
+    .then(() => console.log("✅ MongoDB Connected!"))
+    .catch(err => console.error("❌ DB Error:", err));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(5000, () => console.log("🚀 Server running on port 5000"));

@@ -1,26 +1,15 @@
 const mongoose = require('mongoose');
 
 const ExpenseSchema = new mongoose.Schema({
-  // Kis user ka expense hai
-  userId: { type: String, required: true }, 
-  
-  title: { type: String, required: true }, // e.g., "Petrol", "Office Rent"
-  amount: { type: Number, required: true },
-  
-  // Isse hum categories manage karenge (Deer Automobiles ya Personal)
-  category: { 
-    type: String, 
-    required: true, 
-    enum: ['TP Expense', 'Car Maintenance', 'Office', 'Personal', 'Other'] 
-  }, 
-  
-  type: { type: String, enum: ['personal', 'business'], default: 'personal' }, 
-  
-  date: { type: Date, default: Date.now },
+  userId: String,
+  regNo: String,
+  carDetails: String,
+  credit: { type: Number, default: 0 },
+  debit: { type: Number, default: 0 },
+  paidBy: String,
   description: String,
-  
-  // Specially for your requirement: Company identification
-  companyName: { type: String, default: 'Individual' } 
+  category: { type: String, required: true },
+  date: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('Expense', ExpenseSchema);
