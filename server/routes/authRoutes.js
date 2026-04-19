@@ -1,72 +1,96 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User'); 
+const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const axios = require('axios'); // Google API se baat karne ke liye
 
-// 1. SIGNUP ROUTE
+const JWT_SECRET = 'EXintelligence_SECRET_KEY_2026';
+
+// --- 1. REAL GOOGLE LOGIN ROUTE ---
+router.post('/google-login', async (req, res) => {
+    const { token } = req.body; // Frontend se Google Access Token aayega
+
+    try {
+        // A. Google ki API ko call karke user ki details mangwana
+        const googleResponse = await axios.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`);
+        const { email, name, sub: googleId } = googleResponse.data;
+
+        // B. Check karein ki ye email hamare database mein pehle se hai?
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // C. Agar naya user hai, toh use DB mein save karein
+            user = new User({
+                name: name,
+                email: email,
+                // Social login ke liye ek random secure password set kar dete hain
+                password: await bcrypt.hash(Math.random().toString(36).slice(-10), 10),
+                businessName: 'Google Workspace' // Default name
+            });
+            await user.save();
+            console.log("✅ New Google User Created:", email);
+        }
+
+        // D. Hamare system ka JWT Token banayein
+        const jwtToken = jwt.sign(
+            { id: user._id }, 
+            JWT_SECRET, 
+            { expiresIn: '7d' }
+        );
+
+        // E. Frontend ko token aur user details bhej dena
+        res.json({ 
+            token: jwtToken, 
+            user: { id: user._id, name: user.name, businessName: user.businessName } 
+        });
+
+    } catch (err) {
+        console.error("❌ Google Auth Error:", err.message);
+        res.status(400).json({ message: "Google Authentication Failed" });
+    }
+});
+
+// --- 2. REGULAR SIGNUP ROUTE (Email/Password) ---
 router.post('/signup', async (req, res) => {
-    console.log("Signup attempt for:", req.body.email); // Debugging ke liye
     try {
         const { name, email, password, businessName } = req.body;
-
-        // Check karein user pehle se to nahi hai
+        
         const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: "User already exists with this email" });
-        }
+        if (existingUser) return res.status(400).json({ message: "User already exists." });
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ 
             name, 
             email, 
             password: hashedPassword, 
-            businessName: businessName || 'Individual' 
+            businessName: businessName || 'Personal Entity' 
         });
 
         await newUser.save();
-        console.log("✅ User registered successfully!");
-        res.status(201).json({ message: "Registration Successful!" });
+        res.status(201).json({ message: "Registration successful." });
     } catch (err) {
-        console.error("❌ Signup Error:", err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
-// 2. LOGIN ROUTE
+// --- 3. REGULAR LOGIN ROUTE (Email/Password) ---
 router.post('/login', async (req, res) => {
-    console.log("Login attempt for:", req.body.email); // Debugging ke liye
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
         
-        if (!user) {
-            return res.status(400).json({ message: "User not found. Please Sign Up." });
-        }
+        if (!user) return res.status(400).json({ message: "User not found." });
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: "Invalid email or password" });
-        }
+        if (!isMatch) return res.status(400).json({ message: "Invalid credentials." });
 
-        // Token banana (JWT)
-        const token = jwt.sign(
-            { id: user._id }, 
-            process.env.JWT_SECRET || 'DEER_AUTO_SECRET_KEY', 
-            { expiresIn: '1d' }
-        );
-
-        console.log("✅ Login Successful!");
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });
         res.json({ 
             token, 
-            user: { 
-                id: user._id, 
-                name: user.name, 
-                businessName: user.businessName 
-            } 
+            user: { id: user._id, name: user.name, businessName: user.businessName } 
         });
     } catch (err) {
-        console.error("❌ Login Error:", err.message);
         res.status(500).json({ error: err.message });
     }
 });
