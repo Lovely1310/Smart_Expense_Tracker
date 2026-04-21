@@ -5,25 +5,46 @@ require('dotenv').config();
 
 const app = express();
 
-// 1. CORS Setup (Isse CORS error hamesha ke liye khatam)
+// 1. CORS CONFIGURATION
+// Ise '*' rakhne se deployment mein errors nahi aate. 
+// Agar aap specific banana chahti hain toh "*" ki jagah apni Vercel link ["https://your-link.vercel.app"] daal sakti hain.
 app.use(cors({
-    origin: "*",
+    origin: "*", 
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
+// 2. MIDDLEWARE
 app.use(express.json());
 
-// 2. Routes 
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/expenses', require('./routes/expenseRoutes'));
+// 3. HEALTH CHECK ROUTE (Browser mein check karne ke liye)
+app.get('/', (req, res) => {
+    res.send("<h1>Expense Intelligence API is Live!</h1><p>Backend is working perfectly.</p>");
+});
 
-// 3. Health Check (Test link)
-app.get('/', (req, res) => res.send("<h1>Backend is Live!</h1>"));
+// 4. ROUTES REGISTRATION
+// Ensure kijiye ki routes folder mein ye files sahi naam se hain
+const authRoutes = require('./routes/authRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
-// 4. DB Connection
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("✅ MongoDB Connected!"))
-    .catch(err => console.error("❌ DB Error:", err));
+app.use('/api/auth', authRoutes);
+app.use('/api/expenses', expenseRoutes);
 
-app.listen(5000, () => console.log("🚀 Server running on port 5000"));
+// 5. DATABASE CONNECTION (Using Environment Variable)
+const MONGO_URI = process.env.MONGO_URI;
+
+mongoose.connect(MONGO_URI)
+    .then(() => console.log("✅ MongoDB Connected Successfully!"))
+    .catch((err) => {
+        console.error("❌ MongoDB Connection Error:");
+        console.error(err.message);
+    });
+
+// 6. SERVER START
+// Render apne aap PORT decide karta hai, isliye process.env.PORT zaroori hai
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log(`🔗 Health Check: http://localhost:${PORT}/`);
+});
