@@ -7,7 +7,7 @@ const Auth = ({ setToken, setUser }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', businessName: '' });
 
-  const API_URL = 'https://ideal-fishstick-r4rw7ww5pjv43p7xv-5000.app.github.dev';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   // --- REAL GOOGLE LOGIN LOGIC ---
   const loginWithGoogle = useGoogleLogin({

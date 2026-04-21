@@ -19,7 +19,7 @@ const Dashboard = ({ user, setToken }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({ regNo: '', carDetails: '', credit: 0, debit: 0, paidBy: '', description: '', date: dayjs().format('YYYY-MM-DD') });
 
-  const API_URL = 'https://ideal-fishstick-r4rw7ww5pjv43p7xv-5000.app.github.dev';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => { fetchData(); }, []);
 
