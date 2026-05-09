@@ -146,7 +146,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       <aside className="w-72 bg-[#020617] text-white flex flex-col h-screen sticky top-0 shrink-0 shadow-2xl">
         <div className="p-10 border-b border-white/5 text-center">
           <h1 className="text-2xl font-black italic tracking-tighter text-purple-500 leading-none">
-            DEER <br/> <span className="text-white font-extrabold uppercase tracking-normal">AUTOMOBILES</span>
+            EXPENSE <br/> <span className="text-white font-extrabold uppercase tracking-normal">INTELLIGENCE</span>
           </h1>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2 italic italic">Enterprise v5.0</p>
         </div>
